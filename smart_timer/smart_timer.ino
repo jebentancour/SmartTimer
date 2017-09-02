@@ -1,4 +1,3 @@
-
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
@@ -83,13 +82,11 @@ void setRelay(boolean state){
 boolean reset = false;
 boolean firstConnect = true;
 int wifiMode;
-int k;
 
 void setup(void){  
   pinMode(RELAY, OUTPUT);
   EEPROM.begin(0x08);
-  int lastRelayState = EEPROM.read(0x00);
-  if (lastRelayState == 0x01) {
+  if (EEPROM.read(0x00) == 0x01) {
      digitalWrite(RELAY, HIGH);
   } else {
      digitalWrite(RELAY, LOW);
@@ -106,13 +103,13 @@ void setup(void){
   power_read.startMeasure();
   
   Serial.begin(115200);
-  Serial.println("---------- SmartTimer v0.1 ----------");
+  Serial.println(F("---------- SmartTimer v0.2 ----------"));
   
   //File System Init
   SPIFFS.begin();
   //SPIFFS.format();
   // List files
-  Serial.println("Files in SPIFFS");
+  Serial.println(F("Files in SPIFFS"));
   Dir dir = SPIFFS.openDir("/");
   while (dir.next()) {    
     String fileName = dir.fileName();
@@ -122,33 +119,35 @@ void setup(void){
 
   // Load configuration
   if(!load_config()) {
-    Serial.println("Couldn't load config");
+    Serial.println(F("Couldn't load config"));
+    EEPROM.write(0x01, 0x00);
+    EEPROM.commit();
   }
 
   wifiMode = EEPROM.read(0x01);
   if (wifiMode == 0x01) {
-    Serial.print("WiFi STA mode setup ");
+    Serial.print(F("WiFi STA mode setup "));
     Serial.println(config.ssid);
     WiFi.mode(WIFI_STA);
     WiFi.begin(config.ssid.c_str(), config.password.c_str());
-    Serial.print("MQTT Client setup ");
+    Serial.print(F("MQTT Client setup "));
     Serial.print(config.mqtt_server);
     Serial.print(":");
     Serial.println(config.mqtt_port.toInt());
     if (config.mqtt_secure == "on") {
-      Serial.println("Using SSL");
+      Serial.println(F("Using SSL"));
       mqttClient.setClient(wifiClientSecure);
     } else {
-      Serial.println("Not using SSL");
+      Serial.println(F("Not using SSL"));
       mqttClient.setClient(wifiClient);
     }
     mqttClient.setServer(config.mqtt_server.c_str(), config.mqtt_port.toInt());
     mqttClient.setCallback(callback);
   } else {
-    flipper.attach(1.0, flip);
+    flipper.attach(0.1, flip);
     EEPROM.write(0x01, 0x01);
     EEPROM.commit();
-    Serial.print("WiFi AP mode setup ");
+    Serial.print(F("WiFi AP mode setup "));
     String ssid = "SmartTimer-" + String(ESP.getChipId());
     Serial.println(ssid);
     WiFi.mode(WIFI_STA);
@@ -157,7 +156,7 @@ void setup(void){
     serverInit();
   }
 
-  Serial.println("END Setup");
+  Serial.println(F("END setup"));
   longPress = millis();
 }
  
@@ -166,16 +165,16 @@ void loop(void){
     detachInterrupt(digitalPinToInterrupt(BUTTON));
     flipper.detach();
     digitalWrite(LED, LOW);
-    Serial.println("Restart!");
+    Serial.println(F("Restart!"));
     delay(5000);
     ESP.restart();
   }
   if (wifiMode == 0x01) {
     // STA mode
-    if (digitalRead(BUTTON) != LOW){
+    if (digitalRead(BUTTON) == HIGH){
       longPress = millis();
     }
-    if (millis() > (longPress + 2000)){
+    if ((millis() - longPress) > 2000){
       EEPROM.write(0x01, 0x00);
       EEPROM.commit();
       reset = true;
@@ -186,7 +185,7 @@ void loop(void){
       flipper.detach();
       digitalWrite(LED, HIGH);
       if (pub) {
-        Serial.print("Updating MQTT state ... ");
+        Serial.print(F("Updating MQTT state ... "));
         String topicString = config.mqtt_topic + "/status";
         topicString.toCharArray(topic_buff, topicString.length()+1);
         if (digitalRead(RELAY)) {
@@ -195,9 +194,9 @@ void loop(void){
           pub = mqttClient.publish(topic_buff,"OFF",true);
         }
         if (pub) {
-          Serial.print("OK");
+          Serial.print(F("OK"));
         } else {
-          Serial.print("ERROR");
+          Serial.print(F("ERROR"));
         }
         Serial.println();
         pub = false;
@@ -205,10 +204,10 @@ void loop(void){
     }
   } else {
     // AP mode
-    if (digitalRead(BUTTON) != LOW){
+    if (digitalRead(BUTTON) == HIGH){
       longPress = millis();
     }
-    if (millis() > (longPress + 2000)){
+    if ((millis() - longPress) > 2000){
       EEPROM.write(0x01, 0x01);
       EEPROM.commit();
       reset = true;
@@ -219,7 +218,7 @@ void loop(void){
 
 bool MQTT_connect() {
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("Connecting to WiFi ...");
+    Serial.println(F("Connecting to WiFi ..."));
     flipper.detach();
     flipper.attach(0.3, flip);
     firstConnect = true;
@@ -228,7 +227,7 @@ bool MQTT_connect() {
   }
 
   if (firstConnect){
-    Serial.print("Connected IP ");
+    Serial.print(F("Connected! IP: "));
     Serial.println(WiFi.localIP());
     firstConnect = false;
   }
@@ -241,7 +240,7 @@ bool MQTT_connect() {
   flipper.detach();
   flipper.attach(0.1, flip);
   
-  Serial.print("Connecting to MQTT broker as ");
+  Serial.print(F("Connecting to MQTT broker as "));
   String clientId = "SmartTimer-" + String(ESP.getChipId()) + "-";
   clientId += String(random(ESP.getCycleCount()), HEX);
   clientId.toCharArray(client_buff, clientId.length()+1);
@@ -259,16 +258,16 @@ bool MQTT_connect() {
   if (!conn) {
     int state = mqttClient.state();
     switch (state) {
-      case MQTT_CONNECTION_TIMEOUT: Serial.println("The server didn't respond within the keepalive time"); break;
-      case MQTT_CONNECTION_LOST: Serial.println("The network connection was broken"); break;
-      case MQTT_CONNECT_FAILED: Serial.println("The network connection failed"); break;
-      case MQTT_DISCONNECTED: Serial.println("The client is disconnected cleanly"); break;
-      case MQTT_CONNECTED: Serial.println("The cient is connected"); break;
-      case MQTT_CONNECT_BAD_PROTOCOL: Serial.println("The server doesn't support the requested version of MQTT"); break;
-      case MQTT_CONNECT_BAD_CLIENT_ID: Serial.println("The server rejected the client identifier"); break;
-      case MQTT_CONNECT_UNAVAILABLE: Serial.println("The server was unable to accept the connection"); break;
-      case MQTT_CONNECT_BAD_CREDENTIALS: Serial.println("The username/password were rejected"); break;
-      case MQTT_CONNECT_UNAUTHORIZED: Serial.println("The client was not authorized to connect"); break;
+      case MQTT_CONNECTION_TIMEOUT: Serial.println(F("The server didn't respond within the keepalive time")); break;
+      case MQTT_CONNECTION_LOST: Serial.println(F("The network connection was broken")); break;
+      case MQTT_CONNECT_FAILED: Serial.println(F("The network connection failed")); break;
+      case MQTT_DISCONNECTED: Serial.println(F("The client is disconnected cleanly")); break;
+      case MQTT_CONNECTED: Serial.println(F("The cient is connected")); break;
+      case MQTT_CONNECT_BAD_PROTOCOL: Serial.println(F("The server doesn't support the requested version of MQTT")); break;
+      case MQTT_CONNECT_BAD_CLIENT_ID: Serial.println(F("The server rejected the client identifier")); break;
+      case MQTT_CONNECT_UNAVAILABLE: Serial.println(F("The server was unable to accept the connection")); break;
+      case MQTT_CONNECT_BAD_CREDENTIALS: Serial.println(F("The username/password were rejected")); break;
+      case MQTT_CONNECT_UNAUTHORIZED: Serial.println(F("The client was not authorized to connect")); break;
     }
     mqttClient.disconnect();
     return false;
@@ -289,40 +288,41 @@ void timedTask() {
 }
 
 void getPower() {
-  Serial.print("Reading data ... ");
+  Serial.print(F("Reading data ... "));
   double power = power_read.getPower();
   yield();
   double voltage = power_read.getVoltage();
   yield();
   if (isnan(power_read.getPower() || power_read.getVoltage())) {
-    Serial.println("ERROR");
+    Serial.println(F("ERROR"));
     return;
   }
-  Serial.println("OK");
+  Serial.println(F("OK"));
   
   String pubString = "{\"power\":" + String(power) + "}";
   pubString.toCharArray(message_buff, pubString.length()+1);
   Serial.println(pubString);
 
   if (mqttClient.connected()){
-    Serial.print("Updating MQTT data ... ");
+    Serial.print(F("Updating MQTT data ... "));
     String topicString = config.mqtt_topic + "/power";
     topicString.toCharArray(topic_buff, topicString.length()+1);
     if (mqttClient.publish(topic_buff, message_buff)) {
-      Serial.println("OK");
+      Serial.println(F("OK"));
     } else {
-      Serial.println("ERROR");
+      Serial.println(F("ERROR"));
     }
   }
 
   if(WiFi.status() == WL_CONNECTED && config.oem_server.length() > 0 && config.oem_node.length() > 0 && config.oem_key.length() > 0) {
-    Serial.print("Updating OEM data ... ");
+    Serial.print(F("Updating OEM data ... "));
+    oemClient.flush();
     String url = "/input/post?json=" + pubString + "&node="+ config.oem_node + "&apikey=" + config.oem_key;
     if (!oemClient.connect(config.oem_server.c_str(), 443)) {
-      Serial.println("Connection ERROR");
+      Serial.println(F("ERROR"));
     } else {
       oemClient.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + config.oem_server + "\r\n" + "Connection: close\r\n\r\n");
-      Serial.println("Connection OK");
+      Serial.println(F("OK"));
     }  
   }
 }

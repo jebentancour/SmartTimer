@@ -26,8 +26,6 @@ boolean load_config() {
 	File configFile = SPIFFS.open(CONFIG_FILE, "r");
 	if (!configFile) {
 		Serial.println("Failed to open config file");
-    EEPROM.write(0x01, 0x00);
-    EEPROM.commit();
 		return false;
 	}
 
@@ -35,8 +33,6 @@ boolean load_config() {
 	if (size > 1024) {
 		Serial.println("Config file size is too large");
 		configFile.close();
-    EEPROM.write(0x01, 0x00);
-    EEPROM.commit();
 		return false;
 	}
 
@@ -48,7 +44,7 @@ boolean load_config() {
 	// use configFile.readString instead.
 	configFile.readBytes(buf.get(), size);
 	configFile.close();
-	Serial.print("JSON file size: "); Serial.print(size); Serial.println(" bytes");
+	Serial.print("JSON CONFIG file size: "); Serial.print(size); Serial.println(" bytes");
 
 	StaticJsonBuffer<1024> jsonBuffer;
 	JsonObject& json = jsonBuffer.parseObject(buf.get());
@@ -74,19 +70,19 @@ boolean load_config() {
   config.oem_key = json["oem_key"].asString();
   delay(5);
 
-	Serial.println("Data initialized.");
-	Serial.print("WIFI_SSID: "); Serial.println(config.ssid);
-	Serial.print("WIFI_PASS: "); Serial.println(config.password);
-  Serial.print("MQTT_SERVER: "); Serial.println(config.mqtt_server);
-  Serial.print("MQTT_PORT: "); Serial.println(config.mqtt_port);
-  Serial.print("MQTT_TOPIC: "); Serial.println(config.mqtt_topic);
-  Serial.print("MQTT_USER: "); Serial.println(config.mqtt_user);
-  Serial.print("MQTT_PASS: "); Serial.println(config.mqtt_psw);
-  Serial.print("MQTT_SECURE: "); Serial.println(config.mqtt_secure);
-  Serial.print("OEM_SERVER: "); Serial.println(config.oem_server);
-  Serial.print("OEM_NODE: "); Serial.println(config.oem_node);
-  Serial.print("OEM_KEY: "); Serial.println(config.oem_key);
-  delay(5);
+	Serial.println("Config initialized!");
+	//Serial.print("WIFI_SSID: "); Serial.println(config.ssid);
+	//Serial.print("WIFI_PASS: "); Serial.println(config.password);
+  //Serial.print("MQTT_SERVER: "); Serial.println(config.mqtt_server);
+  //Serial.print("MQTT_PORT: "); Serial.println(config.mqtt_port);
+  //Serial.print("MQTT_TOPIC: "); Serial.println(config.mqtt_topic);
+  //Serial.print("MQTT_USER: "); Serial.println(config.mqtt_user);
+  //Serial.print("MQTT_PASS: "); Serial.println(config.mqtt_psw);
+  //Serial.print("MQTT_SECURE: "); Serial.println(config.mqtt_secure);
+  //Serial.print("OEM_SERVER: "); Serial.println(config.oem_server);
+  //Serial.print("OEM_NODE: "); Serial.println(config.oem_node);
+  //Serial.print("OEM_KEY: "); Serial.println(config.oem_key);
+  //delay(5);
   
 	return true;
 }
