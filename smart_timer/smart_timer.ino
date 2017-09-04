@@ -1,3 +1,4 @@
+
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
@@ -32,7 +33,6 @@ ESP8266PowerClass power_read;
 
 WiFiClient wifiClient;
 WiFiClientSecure wifiClientSecure;
-WiFiClientSecure oemClient;
 
 PubSubClient mqttClient;
 
@@ -99,11 +99,10 @@ void setup(void){
   attachInterrupt(BUTTON,toggle,FALLING);
 
   power_read.enableMeasurePower();
-  power_read.selectMeasureCurrentOrVoltage(VOLTAGE);
   power_read.startMeasure();
   
   Serial.begin(115200);
-  Serial.println(F("---------- SmartTimer v0.2 ----------"));
+  Serial.println(F("---------- SmartTimer v0.3 ----------"));
   
   //File System Init
   SPIFFS.begin();
@@ -222,7 +221,7 @@ bool MQTT_connect() {
     flipper.detach();
     flipper.attach(0.3, flip);
     firstConnect = true;
-    delay(500);
+    delay(1000);
     return false;
   }
 
@@ -270,6 +269,7 @@ bool MQTT_connect() {
       case MQTT_CONNECT_UNAUTHORIZED: Serial.println(F("The client was not authorized to connect")); break;
     }
     mqttClient.disconnect();
+    delay(1000);
     return false;
   }
 
@@ -290,10 +290,8 @@ void timedTask() {
 void getPower() {
   Serial.print(F("Reading data ... "));
   double power = power_read.getPower();
-  yield();
-  double voltage = power_read.getVoltage();
-  yield();
-  if (isnan(power_read.getPower() || power_read.getVoltage())) {
+  
+  if (isnan(power_read.getPower())) {
     Serial.println(F("ERROR"));
     return;
   }
@@ -301,7 +299,7 @@ void getPower() {
   
   String pubString = "{\"power\":" + String(power) + "}";
   pubString.toCharArray(message_buff, pubString.length()+1);
-  Serial.println(pubString);
+  //Serial.println(pubString);
 
   if (mqttClient.connected()){
     Serial.print(F("Updating MQTT data ... "));
@@ -312,17 +310,5 @@ void getPower() {
     } else {
       Serial.println(F("ERROR"));
     }
-  }
-
-  if(WiFi.status() == WL_CONNECTED && config.oem_server.length() > 0 && config.oem_node.length() > 0 && config.oem_key.length() > 0) {
-    Serial.print(F("Updating OEM data ... "));
-    oemClient.flush();
-    String url = "/input/post?json=" + pubString + "&node="+ config.oem_node + "&apikey=" + config.oem_key;
-    if (!oemClient.connect(config.oem_server.c_str(), 443)) {
-      Serial.println(F("ERROR"));
-    } else {
-      oemClient.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + config.oem_server + "\r\n" + "Connection: close\r\n\r\n");
-      Serial.println(F("OK"));
-    }  
   }
 }

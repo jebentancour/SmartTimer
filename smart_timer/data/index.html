@@ -14,10 +14,7 @@
 		["mqtt_topic", "mqttTopicInput"],
 		["mqtt_user", "mqttUserInput"],
 		["mqtt_psw", "mqttPswInput"],
-		["mqtt_secure", "mqttSecureInput"],
-		["oem_server", "oemServerInput"],
-		["oem_node", "oemNdeInput"],
-		["oem_key", "oemKeyInput"]
+		["mqtt_secure", "mqttSecureInput"]
 	];
 	function getConf(){
 		var xmlhttp = new XMLHttpRequest();
@@ -150,28 +147,6 @@
 								<option value="off">No</option>
 								<option value="on">Si</option>
 							</select>
-						</div>
-						<div class="form-group">
-						    <button type="submit" class="btn btn-primary pull-right">Guardar</button>
-						</div>
-					</form>
-				  </div>
-				</div>
-				<div class="panel panel-default">
-				  <div class="panel-heading">Configuración OEM</div>
-				  <div class="panel-body">
-					<form action="save" method="post">
-						<div class="form-group">
-							<label for="oemServerInput">Servidor</label>
-						    <input type="text" name="oem_server" class="form-control" id="oemServerInput">
-						</div>
-						<div class="form-group">
-							<label for="oemNdeInput">Nodo</label>
-						    <input type="text" name="oem_node" class="form-control" id="oemNdeInput">
-						</div>
-						<div class="form-group">
-							<label for="oemKeyInput">Key</label>
-						    <input type="text" name="oem_key" class="form-control" id="oemKeyInput">
 						</div>
 						<div class="form-group">
 						    <button type="submit" class="btn btn-primary pull-right">Guardar</button>

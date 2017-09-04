@@ -39,7 +39,7 @@ String getContentType(String filename) {
 }
 
 bool handleFileRead(String path) {
-	Serial.println("handleFileRead: " + path);
+	//Serial.println("handleFileRead: " + path);
 	if (path.endsWith("/")) path += "index.html";
 	String contentType = getContentType(path);
 	String pathWithGz = path + ".gz";
@@ -47,13 +47,13 @@ bool handleFileRead(String path) {
 		if (SPIFFS.exists(pathWithGz)) path += ".gz";
 		File file = SPIFFS.open(path, "r");
 		size_t sent = server.streamFile(file, contentType);
-		Serial.printf("File %s sent\n", file.name());
+		//Serial.printf("File %s sent\n", file.name());
     file.close();
 		return true;
+	} else {
+		//Serial.printf("Cannot find %s\n", path.c_str());
+    return false;
 	}
-	else
-		Serial.printf("Cannot find %s\n", path.c_str());
-	return false;
 }
 
 void serverInit() {
@@ -72,5 +72,5 @@ void serverInit() {
 	});
  
 	server.begin();
-	Serial.println("HTTP server started");
+	Serial.println(F("HTTP server started"));
 }

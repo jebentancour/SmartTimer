@@ -23,9 +23,6 @@ typedef struct {
   String mqtt_user;
   String mqtt_psw;
   String mqtt_secure;
-  String oem_server;
-  String oem_node;
-  String oem_key;
 } strConfig;
 
 extern strConfig config;

@@ -25,13 +25,13 @@ unsigned char h2int(char c)
 boolean load_config() {
 	File configFile = SPIFFS.open(CONFIG_FILE, "r");
 	if (!configFile) {
-		Serial.println("Failed to open config file");
+		Serial.println(F("Failed to open config file"));
 		return false;
 	}
 
 	size_t size = configFile.size();
 	if (size > 1024) {
-		Serial.println("Config file size is too large");
+		Serial.println(F("Config file size is too large"));
 		configFile.close();
 		return false;
 	}
@@ -44,13 +44,13 @@ boolean load_config() {
 	// use configFile.readString instead.
 	configFile.readBytes(buf.get(), size);
 	configFile.close();
-	Serial.print("JSON CONFIG file size: "); Serial.print(size); Serial.println(" bytes");
+	//Serial.print(F("JSON CONFIG file size: ")); Serial.print(size); Serial.println(F(" bytes"));
 
 	StaticJsonBuffer<1024> jsonBuffer;
 	JsonObject& json = jsonBuffer.parseObject(buf.get());
 
 	if (!json.success()) {
-		Serial.println("Failed to parse config file");
+		Serial.println(F("Failed to parse config file"));
 		return false;
 	}
 	String temp;
@@ -65,12 +65,9 @@ boolean load_config() {
   config.mqtt_user = json["mqtt_user"].asString();
   config.mqtt_psw = json["mqtt_psw"].asString();
   config.mqtt_secure = json["mqtt_secure"].asString();
-  config.oem_server = json["oem_server"].asString();
-  config.oem_node = json["oem_node"].asString();
-  config.oem_key = json["oem_key"].asString();
-  delay(5);
+  //delay(5);
 
-	Serial.println("Config initialized!");
+	Serial.println(F("Config initialized!"));
 	//Serial.print("WIFI_SSID: "); Serial.println(config.ssid);
 	//Serial.print("WIFI_PASS: "); Serial.println(config.password);
   //Serial.print("MQTT_SERVER: "); Serial.println(config.mqtt_server);
@@ -79,16 +76,13 @@ boolean load_config() {
   //Serial.print("MQTT_USER: "); Serial.println(config.mqtt_user);
   //Serial.print("MQTT_PASS: "); Serial.println(config.mqtt_psw);
   //Serial.print("MQTT_SECURE: "); Serial.println(config.mqtt_secure);
-  //Serial.print("OEM_SERVER: "); Serial.println(config.oem_server);
-  //Serial.print("OEM_NODE: "); Serial.println(config.oem_node);
-  //Serial.print("OEM_KEY: "); Serial.println(config.oem_key);
   //delay(5);
   
 	return true;
 }
 
 boolean save_config() {
-	Serial.println("Saving config...");
+	Serial.print(F("Saving config..."));
 	StaticJsonBuffer<1024> jsonBuffer;
 	JsonObject& json = jsonBuffer.createObject();
   
@@ -100,14 +94,11 @@ boolean save_config() {
   json["mqtt_user"] = config.mqtt_user;
   json["mqtt_psw"] = config.mqtt_psw;
   json["mqtt_secure"] = config.mqtt_secure;
-  json["oem_server"] = config.oem_server;
-  json["oem_node"] = config.oem_node;
-  json["oem_key"] = config.oem_key;
 			
 	//TODO add AP data to html
 	File configFile = SPIFFS.open(CONFIG_FILE, "w");
 	if (!configFile) {
-		Serial.println("Failed to open config file for writing");
+		Serial.println(F("Failed to open config file for writing"));
 		configFile.close();
 		return false;
 	}
@@ -116,10 +107,11 @@ boolean save_config() {
 	configFile.flush();
 	configFile.close();
  
-  String temp;
+  /*String temp;
   json.prettyPrintTo(temp);
   Serial.println(temp);
-  delay(10);
-  
+  delay(10);*/
+
+  Serial.println(F("OK"));
 	return true;
 }
