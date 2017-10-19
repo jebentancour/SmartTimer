@@ -1,8 +1,8 @@
 # Smart Timer
 
-This project is made to run in the Sonoff POW hardware.
+This project is made to run in the [Sonoff](https://www.itead.cc/smart-home/sonoff-wifi-wireless-switch.html) and [Sonoff POW](https://www.itead.cc/smart-home/sonoff-pow.html) hardware.
 
-By default it starts an AP with the name "SmartTimer-<chip_ID>" and the password is "password". Going to http://192.168.4.1 you will see the web configuration portal for WiFi and MQTT.
+By default it starts an AP with the name `SmartTimer-CHIP_ID` and the password is `password`. Going to http://192.168.4.1 you will see the web configuration portal for WiFi and MQTT.
 
 ![portal](https://github.com/jebentancour/Smart-Timer/blob/master/portal.jpg)
 
