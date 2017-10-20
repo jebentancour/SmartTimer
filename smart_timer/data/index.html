@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+	<title>SmartTimer</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<script>
+	var options = [
+		["ssid", "ssidInput"],
+		["psw", "pswInput"],
+		["mqtt_server", "mqttServerInput"],
+		["mqtt_port", "mqttPortInput"],
+		["mqtt_topic", "mqttTopicInput"],
+		["mqtt_user", "mqttUserInput"],
+		["mqtt_psw", "mqttPswInput"],
+		["mqtt_secure", "mqttSecureInput"]
+	];
+	function getConf(){
+		var xmlhttp = new XMLHttpRequest();
+		xmlhttp.onreadystatechange = function(){
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200){
+				if(this.responseXML != null){
+					for (i = 0; i < options.length; i++) {
+						if (this.responseXML.getElementsByTagName(options[i][0])[0].childNodes.length > 0) {
+							document.getElementById(options[i][1]).value = this.responseXML.getElementsByTagName(options[i][0])[0].childNodes[0].nodeValue;
+						}
+					}
+				}
+			}
+		}
+		xmlhttp.open("GET","config", true);
+		xmlhttp.send();
+	}
+	function scan(){
+	    document.getElementById("searching").innerHTML = "Buscando...";
+		var x,xmlhttp,xmlDoc
+		xmlhttp = new XMLHttpRequest();
+		xmlhttp.onreadystatechange = function(){
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200){
+				if(this.responseXML != null){
+					xmlDoc = xmlhttp.responseXML;
+					x = xmlDoc.getElementsByTagName("network");
+					table="";
+					for (i = 0; i <x.length; i++) {
+					  table += "<tr><td>";
+					  table += x[i].getElementsByTagName("ssid")[0].childNodes[0].nodeValue;
+					  table += "</td><td>";
+					  table += x[i].getElementsByTagName("quality")[0].childNodes[0].nodeValue;
+					  table += "%</td><td>";
+					  if(x[i].getElementsByTagName("encryption")[0].childNodes[0].nodeValue != "true"){
+						table +=  "<img style=\"vertical-align:middle;\" class=\"pull-right\" src=\"lock-open.png\">";
+					  } else {
+					    table +=  "<img style=\"vertical-align:middle;\" class=\"pull-right\" src=\"lock.png\">";
+					  }
+					  table += "</td></tr>";
+					}
+					document.getElementById("networks").innerHTML = table;
+					document.getElementById("searching").innerHTML = "Buscar";
+				}
+			}
+		}
+		xmlhttp.open("GET", "scan", true);
+		xmlhttp.send();
+	}
+	function reset(){
+		var xmlhttp = new XMLHttpRequest();
+		xmlhttp.onreadystatechange = function(){
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200){
+				if(this.responseXML != null){
+				    alert(this.responseXML.getElementsByTagName("msg")[0].childNodes[0].nodeValue);
+				}
+			}
+		}
+		xmlhttp.open("POST","reset", true);
+		xmlhttp.send();
+	}
+	</script>
+</head>
+<body onload="getConf()">
+	<div class="container">
+		<p></p>
+		<div class="panel panel-default">
+		  <div class="panel-body">
+			<img style="vertical-align:middle;" src="favico.ico">
+			<h2 style="vertical-align:middle; display:inline;">SmartTimer</h2>
+			<button style="vertical-align:middle;" class="btn btn-danger pull-right" onclick="reset()">Reiniciar</button>
+		  </div>
+		</div>
+		<p></p>
+		<div class="row">
+		    <div class="col-md-6">
+  				<div class="panel panel-default">
+				  <div class="panel-heading">Configuración WiFi</div>
+				  <div class="panel-body">
+					<form action="save" method="post">
+						<div class="form-group">
+							<label for="ssidInput">SSID</label>
+						    <input type="text" name="ssid" class="form-control" id="ssidInput">
+						</div>
+						<div class="form-group">
+							<label for="pswInput">Contraseña</label>
+						    <input type="password" name="psw" class="form-control" id="pswInput">
+						</div>
+						<div class="form-group">
+						    <button type="submit" class="btn btn-primary pull-right">Guardar</button>
+						</div>
+					</form>
+				  </div>
+				</div>
+				<div class="panel panel-default">
+				  <div class="panel-heading">Redes WiFi dispinibles</div>
+				  <div class="panel-body">
+					<table class="table table-condensed" id="networks"></table>
+					<button class="btn btn-default pull-right" onclick="scan()" id="searching">Buscar</button>
+				  </div>
+				</div>
+			</div>
+			<div class="col-md-6">
+				<div class="panel panel-default">
+				  <div class="panel-heading">Configuración MQTT</div>
+				  <div class="panel-body">
+					<form action="save" method="post">
+						<div class="form-group">
+							<label for="mqttServerInput">Servidor</label>
+						    <input type="text" name="mqtt_server" class="form-control" id="mqttServerInput">
+						</div>
+						<div class="form-group">
+							<label for="mqttPortInput">Puerto</label>
+						    <input type="text" name="mqtt_port" class="form-control" id="mqttPortInput">
+						</div>
+						<div class="form-group">
+							<label for="mqttTopicInput">Topic</label>
+						    <input type="text" name="mqtt_topic" class="form-control" id="mqttTopicInput">
+						</div>
+						<div class="form-group">
+							<label for="mqttUserInput">Usuario</label>
+						    <input type="text" name="mqtt_user" class="form-control" id="mqttUserInput">
+						</div>
+						<div class="form-group">
+							<label for="mqttPswInput">Contraseña</label>
+						    <input type="password" name="mqtt_psw" class="form-control" id="mqttPswInput">
+						</div>
+						<div class="form-group">
+							<label for="mqttSecureInput">SSL</label>
+							<select name="mqtt_secure" class="form-control" id="mqttSecureInput">
+								<option value="off">No</option>
+								<option value="on">Si</option>
+							</select>
+						</div>
+						<div class="form-group">
+						    <button type="submit" class="btn btn-primary pull-right">Guardar</button>
+						</div>
+					</form>
+				  </div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
